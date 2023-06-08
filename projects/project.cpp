@@ -10,6 +10,7 @@
 #include <thread>
 #include <limits>
 #include <climits>
+#include <cmath>
 
 struct infor
 {
@@ -20,8 +21,6 @@ struct infor
     std::string contestant_name;
     std::string teacher_name;
 };
-
-
 
 struct TreeNode {
     infor data;
@@ -65,7 +64,12 @@ TreeNode* build_binary_tree(const std::vector<infor>& teamData) {
 }
 
 TreeNode* search_node(TreeNode* root, long long targetTeamNumber) {
-    if (root == nullptr || root->data.team_number == targetTeamNumber) {
+    if (root == nullptr) {
+        std::cout << "查找失败" << std::endl;
+        return nullptr;
+    }
+
+    if (root->data.team_number == targetTeamNumber) {
         return root;
     }
 
@@ -122,6 +126,12 @@ void remove_data(std::vector<infor>& teamData, long long targetNumber){
         teamData.end());
 
     std::ofstream file("team.txt");
+    file << "参赛队编号" << '\t'<<'#'<<'\t'
+         << "参赛作品名称" << '\t'<<'#'<<'\t'
+         << "参赛学校" << '\t'<<'#'<<'\t'
+         << "赛事类别" << '\t'<<'#'<<'\t'
+         << "参赛者" << '\t'<<'#'<<'\t'
+         << "指导教师" << '\n';
     for (const infor& data : teamData) {
         file << data.team_number << '\t'<<'#'<<'\t'
             << data.project_name << '\t'<<'#'<<'\t'
@@ -138,6 +148,12 @@ void remove_data(std::vector<infor>& teamData, long long targetNumber){
 void append_data(std::vector<infor>& teamData, infor appendTeam){
     teamData.push_back(appendTeam);
     std::ofstream file("team.txt", std::ios::app);
+    file << "参赛队编号" << '\t'<<'#'<<'\t'
+         << "参赛作品名称" << '\t'<<'#'<<'\t'
+         << "参赛学校" << '\t'<<'#'<<'\t'
+         << "赛事类别" << '\t'<<'#'<<'\t'
+         << "参赛者" << '\t'<<'#'<<'\t'
+         << "指导教师" << '\n';
 
     file << appendTeam.team_number << '\t'<<'#'<<'\t'
          << appendTeam.project_name << '\t'<<'#'<<'\t'
@@ -148,7 +164,6 @@ void append_data(std::vector<infor>& teamData, infor appendTeam){
 
     file.close();
 }
-
 
 void revise_data(std::vector<infor>& teamData, long long reviseTeamNumber, std::string modifyItem, std::string reviseInfo){
     auto reviseTeam= std::find_if(teamData.begin(), teamData.end(),
@@ -186,6 +201,12 @@ void revise_data(std::vector<infor>& teamData, long long reviseTeamNumber, std::
     }
 
     std::ofstream file("team.txt");
+    file << "参赛队编号" << '\t'<<'#'<<'\t'
+         << "参赛作品名称" << '\t'<<'#'<<'\t'
+         << "参赛学校" << '\t'<<'#'<<'\t'
+         << "赛事类别" << '\t'<<'#'<<'\t'
+         << "参赛者" << '\t'<<'#'<<'\t'
+         << "指导教师" << '\n';
     for (const infor& data : teamData) {
         file << data.team_number << '\t'<<'#'<<'\t'
             << data.project_name << '\t'<<'#'<<'\t'
@@ -200,23 +221,42 @@ void revise_data(std::vector<infor>& teamData, long long reviseTeamNumber, std::
 }
 
 void print_data(infor teamData){
-    std::cout<<"队伍编号："<<teamData.team_number<<" ";
-    std::cout<<"参赛作品名称:"<<teamData.project_name<<" ";
-    std::cout<<"参赛学校:"<<teamData.uni_name<<" ";
-    std::cout<<"赛事类别:"<<teamData.match_name<<" ";
-    std::cout<<"参赛者："<<teamData.contestant_name<<" ";
-    std::cout<<"指导教师:"<<teamData.teacher_name<<" ";
-    std::cout<<std::endl;
+    std::cout<<"队伍编号："<<teamData.team_number<<std::endl;
+    std::cout<<"参赛作品名称:"<<teamData.project_name<<std::endl;
+    std::cout<<"参赛学校:"<<teamData.uni_name<<std::endl;
+    std::cout<<"赛事类别:"<<teamData.match_name<<std::endl;
+    std::cout<<"参赛者："<<teamData.contestant_name<<std::endl;
+    std::cout<<"指导教师:"<<teamData.teacher_name<<std::endl;
 
+}
+
+int countHeight(TreeNode* treeNode, int height) {
+    if (treeNode != nullptr) {
+        return (height + countHeight(treeNode->left, height + 1) + countHeight(treeNode->right, height + 1));
+    }
+    else {
+        return 0;
+    }
+}   
+double calculateASL(int n, TreeNode* binaryTree) {
+    int startHeight = 1;
+    double nodes = (countHeight(binaryTree, startHeight));
+    double nodeNumber = n;
+    double result = nodes / n;
+    return result;
 }
 infor search_by_team_number(std::vector<infor> teamData, long long team_number, bool isASL = false){
     TreeNode* binaryTree = build_binary_tree(teamData);
     TreeNode* searched_node = search_node(binaryTree, team_number);
-    if(isASL){
-        std::cout<<"ASL:"<<7.6594<<std::endl;
+
+    if(isASL && searched_node != nullptr){
+        double asl = calculateASL(teamData.size(), binaryTree);
+        std::cout<<"平均查找长度为："<<asl<<std::endl;
+        std::cout<<"ASL计算公式为:总结点深度之和/结点个数(countHeight/nodeNumber)"<<std::endl;
     }
     return searched_node->data;
 }
+
 
 std::vector<infor> search_by_uni_name(std::vector<infor> teamData, std::string uni_name){
     std::vector<infor> searched_teams;
@@ -231,59 +271,54 @@ std::vector<infor> search_by_uni_name(std::vector<infor> teamData, std::string u
 
 }
 
-std::vector<long long> get_team_numbers(){
-    std::vector<infor> teamData = read_data();
-    size_t length = teamData.size();
-    std::vector<long long> team_numbers;
-    for(size_t i = 0; i < length; i++){
-        team_numbers.push_back(teamData[i].team_number);
-    }
-    return team_numbers;
-}
+
 
 const size_t ROOM_NUMBER = 9;
-void distributeElements(const std::vector<long long>& data) {
-    int totalElements = data.size();
-    std::vector<std::queue<long long>> queues(ROOM_NUMBER);
-    int numQueues = ROOM_NUMBER;
 
-    if (totalElements == 0 || numQueues == 0) {
-        std::cout << "不合理的输入" << std::endl;
-        return;
-    }
-
-    int elementsPerQueue = totalElements / numQueues;
-    int remainingElements = totalElements % numQueues;
-
-    int dataIndex = 0;
-
-    for (int queueIndex = 0; queueIndex < numQueues; ++queueIndex) {
-        int currentElements = elementsPerQueue + (queueIndex < remainingElements ? 1 : 0);
-
-        for (int i = 0; i < currentElements; ++i) {
-            queues[queueIndex].push(data[dataIndex++]);
+std::vector<std::string> getMatchName(std::vector<infor> data){
+    std::vector<std::string> matchName;
+    for (const infor& team : data) {
+        if(!matchName.empty()){
+            bool isRepeat = false;
+            for(const std::string& name : matchName){
+                if(name == team.match_name){
+                    isRepeat = true;
+                }
+            }
+            if(!isRepeat){
+                matchName.push_back(team.match_name);
+            }
+        }
+        else{
+            matchName.push_back(team.match_name);
         }
     }
+    return matchName;
 }
 
-std::vector<std::queue<long long>> set_rooms() {
-    std::vector<long long> data = get_team_numbers();
-
+std::vector<std::queue<long long>> set_rooms(std::vector<infor> teamData) {
+    std::vector<std::string> matchName = getMatchName(teamData);
     std::vector<std::queue<long long>> final_rooms(ROOM_NUMBER);
-    distributeElements(data);
-
+    for (int i = 0; i < matchName.size(); i++) {
+        std::vector<infor> matchTeams;
+        for (const infor& team : teamData) {
+            if (team.match_name == matchName[i]) {
+                matchTeams.push_back(team);
+            }
+        }
+        int roomNumber = i % ROOM_NUMBER;
+        for (const infor& team : matchTeams) {
+            final_rooms[roomNumber].push(team.team_number);
+        }
+    }
     return final_rooms;
 }
-
-
-
-void calling(std::vector<std::queue<long long>> &final_rooms){
-
-    distributeElements(get_team_numbers());
+void calling(std::vector<infor> teamData){
+    std::vector<std::queue<long long>> rooms = set_rooms(teamData);
     std::cout<<"请输入查看的房间号：";
     int select_number;
     std::cin>>select_number;
-    std::queue<long long> selected_room = final_rooms[select_number];
+    std::queue<long long> selected_room = rooms[select_number];
     for(int i = 0; i <ROOM_NUMBER; i++){
         if(i == select_number){
             continue;
@@ -296,13 +331,13 @@ void calling(std::vector<std::queue<long long>> &final_rooms){
     int minTime = 1000; 
     int maxTime = 2000;
 
-    for(int i = 0; i < 3; i ++){
+    for(int i = 0; i < 5; i ++){
         long long present_team = selected_room.front();
         std::cout<<"当前队伍编号："<<present_team<<'\t';
 
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(1000, 5000);
+        std::uniform_int_distribution<> dis(500, 1000);
         int sleepTime = dis(gen);
         auto start = std::chrono::steady_clock::now();
         while (std::chrono::duration_cast<std::chrono::milliseconds >
@@ -312,7 +347,7 @@ void calling(std::vector<std::queue<long long>> &final_rooms){
             if(j == select_number){
                 continue;
             }
-            final_rooms[j].pop();
+            rooms[j].pop();
         }
         std::cout<<"队伍比赛结束,下一队入场。"<<std::endl;
         selected_room.pop();
@@ -426,6 +461,42 @@ void Graph::dijkstraAlgorithm(int startVertex, int endVertex){
             }
             std::cout << std::endl;
         }
+void searchInfo(std::string target){
+    if (target == "3号组团"){
+        std::cout<<"三号组团是位于校园西南侧的学生宿舍楼。";
+    }
+    else if (target == "西食堂"){
+        std::cout<<"西食堂位于学校西侧，在西操场旁边，为师生提供三餐。";
+    }
+    else if (target == "明德园"){
+        std::cout<<"明德园在西食堂东北方向80m处,名字出自《大学》，体现了学校对学生的深深期望。";
+    }
+    else if (target == "文体中心"){
+        std::cout<<"文体中心位于西操场南侧，内部含有很多运动器材，供学生活动使用。";
+    }
+    else if (target == "西操场"){
+        std::cout<<"西操场在西食堂东侧120m处,常有学生在此踢球。";
+    }
+    else if (target == "文理大楼"){
+        std::cout<<"文理大楼位于校园正中央，是全校最高的建筑。";
+    }
+    else if (target == "行政大楼"){
+        std::cout<<"行政大楼位于北门进门左手边，职能如其名，用于行政人员工作。";
+    }
+    else if (target == "求索园"){
+        std::cout<<"求索园位于图书馆西侧，寓意着追求知识、智慧和创新的精神。";
+    }
+    else if (target == "东食堂"){
+        std::cout<<"东食堂位于学校东侧，毗邻图书馆和东区宿舍。";
+    }
+    else if (target == "图书馆"){
+        std::cout<<"图书馆共有六层，供学生借阅书籍，同时还能为学生提供自习环境。";
+    }
+    else{
+        std::cout<<"输入错误";
+    }
+    
+}
 Graph setSchoolMap(){
     Graph schoolMap(10);
     Vertex v0(0, "3号组团");
@@ -471,7 +542,6 @@ Graph setSchoolMap(){
 
 int main() {
     std::vector<infor> data = read_data();
-    std::vector<std::queue<long long>> final_rooms = set_rooms();
 
     while(true){
         std::cout<<"1.赛事信息管理"<<std::endl;
@@ -509,41 +579,48 @@ int main() {
                     std::cout<<"删除成功"<<std::endl;
                 }
                 else if(manageSymbol == 2){
-                    std::string input;
-                    std::cout<<"请输入要添加的队伍信息(按空格分开)";
-                    std::getline(std::cin, input);
-
-                    std::istringstream iss(input);
-
-                    long long team_number;
-                    std::string project_name;
-                    std::string uni_name;
-                    std::string match_name;
-                    std::string contestant_name;
-                    std::string teacher_name;
+                    std::cout<<"请输入要添加的队伍信息(按空格分开)\n";
+                    
                     infor newTeam;
-
+                    long long team_number;
+                    
                     std::string team_number_str;
-                    if (iss >> team_number_str >> newTeam.project_name>> newTeam.uni_name>> newTeam.match_name >>
-                        newTeam.contestant_name >> newTeam.teacher_name) {
-                            team_number = std::stoll(team_number_str);
-                            newTeam.team_number = team_number;
-                            std::cout << "队伍编号: " << newTeam.team_number << std::endl;
-                            std::cout << "项目名称: " << newTeam.project_name << std::endl;
-                            std::cout << "大学名称: " << newTeam.uni_name << std::endl;
-                            std::cout << "比赛名称: " << newTeam.match_name << std::endl;
-                            std::cout << "参赛者姓名: " << newTeam.contestant_name << std::endl;
-                            std::cout << "指导教师姓名: " << newTeam.teacher_name << std::endl;
-                        }
-                        append_data(data, newTeam);
-                        std::cout<<"添加成功"<<std::endl;
+                    std::getline(std::cin, team_number_str);
+                    std::cout<<"请输入参赛队编号:";
+                    std::getline(std::cin, team_number_str);
+                    std::cout<<"请输入项目名称:";
+                    std::getline(std::cin, newTeam.project_name);
+                    std::cout<<"请输入大学名称:";
+                    std::getline(std::cin, newTeam.uni_name);
+                    std::cout<<"请输入比赛名称:";
+                    std::getline(std::cin, newTeam.match_name);
+                    std::cout<<"请输入参赛者姓名:";
+                    std::getline(std::cin, newTeam.contestant_name);
+                    std::cout<<"请输入指导教师姓名:";
+                    std::cin>>newTeam.teacher_name;
+                    
+                    newTeam.team_number = std::stoll(team_number_str);
+
+
+                    team_number = std::stoll(team_number_str);
+                    newTeam.team_number = team_number;
+                    std::cout<<std::endl;
+                    std::cout << "队伍编号: " << newTeam.team_number << std::endl;
+                    std::cout << "项目名称: " << newTeam.project_name << std::endl;
+                    std::cout << "大学名称: " << newTeam.uni_name << std::endl;
+                    std::cout << "比赛名称: " << newTeam.match_name << std::endl;
+                    std::cout << "参赛者姓名: " << newTeam.contestant_name << std::endl;
+                    std::cout << "指导教师姓名: " << newTeam.teacher_name << std::endl;
+
+                    append_data(data, newTeam);
+                    std::cout<<"添加成功"<<std::endl;
                 }
                 else if(manageSymbol == 3){
                     std::string modifyItem;
                     std::string reviseInfo;
                     long long reviseTeamNumber;
 
-                    std::cout<<"请输入修改队伍编号";
+                    std::cout<<"请输入修改队伍编号:";
                     std::cin>>reviseTeamNumber;
                     std::cout<<std::endl;
 
@@ -556,12 +633,12 @@ int main() {
                     std::cout<<std::endl;
 
                     infor reviseTeam =  search_by_team_number(data, reviseTeamNumber);
-                    std::cout<<"修改前队伍信息：";
+                    std::cout<<"修改前队伍信息：\n";
                     print_data(reviseTeam);
                     revise_data(data, reviseTeamNumber, modifyItem, reviseInfo);
                     
 
-                    std::cout<<"修改后队伍信息: ";
+                    std::cout<<"修改后队伍信息: \n";
                     if(modifyItem == "参赛队编号"){
                         infor revisedTeam = search_by_team_number(data, std::stoll(reviseInfo));
                         print_data(revisedTeam);
@@ -587,11 +664,13 @@ int main() {
 
                 if(searchSymbol == 1){
                     long long teamNumber;
-                    std::cout<<"请输入队伍编号：";
+                    std::cout<<"请输入查询对象：";
                     std::cin>>teamNumber;
                     std::cout<<std::endl;
                     infor searchedTeam = search_by_team_number(data,teamNumber,true);
-                    print_data(searchedTeam);
+                    if(searchedTeam.team_number != 0){
+                        print_data(searchedTeam);
+                    }
                 }
                 else if(searchSymbol == 2){
                     std::string uniName;
@@ -616,7 +695,7 @@ int main() {
                 }
         }
         else if(symbol == 2){
-            calling(final_rooms);
+            calling(data);
 
         }
         else if(symbol == 3){
@@ -626,14 +705,14 @@ int main() {
             std::cout<<"2.查询最短路径:"<<std::endl;
             std::cin>>mapSymbol;
             if (mapSymbol == 1){
-                int vertexNum = 0;
-                std::cout<<"请输入节点代号：";
-                std::cin>>vertexNum;
-                std::string name = schoolMap.getVertexInfo(vertexNum);
-                std::cout<<name<<std::endl;;
+                std::string target;
+                std::cout<<"请输入搜索对象：";
+                std::cin>>target;
+                searchInfo(target);
+                std::cout<<std::endl;
             }
             else if (mapSymbol == 2){
-                std::cout<<"目标地点有:3号组团、西食堂、明德园、文体中心、西操场、文理大楼、行政大楼、求索园、东苑食堂、图书馆";
+                std::cout<<"目标地点有:3号组团、西食堂、明德园、文体中心、西操场、文理大楼、行政大楼、求索园、东苑食堂、图书馆\n";
                 int start,end;
                 std::string input;
 
@@ -665,4 +744,3 @@ int main() {
         }        
     }
 }
-
